@@ -1,0 +1,26 @@
+# docker-compose.yml (VERSÃO XEQUE-MATE - ISOLANDO A LAMBDA)
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      # AQUI ESTÁ A MUDANÇA MAIS IMPORTANTE DE TODAS:
+      # Força a Lambda a rodar dentro do processo do LocalStack,
+      # evitando a necessidade de usar o socket do Docker.
+      - LAMBDA_EXECUTOR=local
+      - SERVICES=lambda,dynamodb,apigateway,iam,s3,ecr
+      - DEFAULT_REGION=us-east-1
+      # A linha abaixo não é mais estritamente necessária, mas vamos manter por segurança.
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      # Continuamos usando o Named Volume, que é a melhor prática.
+      - localstack_data:/tmp/localstack
+      # O socket do Docker ainda pode ser útil para outros serviços, então mantemos.
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+# Declaração do nosso volume gerenciado pelo Docker
+volumes:
+  localstack_data:
